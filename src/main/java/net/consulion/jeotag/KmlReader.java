@@ -27,41 +27,78 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import net.consulion.jeotag.model.LocationRecord;
 
 public class KmlReader {
 
-    public static void read(final File file) {
+    private static final Logger LOG = Logger.getLogger(KmlReader.class.getName());
 
+    public static List<LocationRecord> read(final File file) {
         final Path path = file.toPath();
         final Charset charset = Charset.forName("UTF-8");
         final List<Instant> rawInstants = new ArrayList<>();
         final List<float[]> rawLocations = new ArrayList<>();
-        final List<LocationRecord> locations = new ArrayList<>();
+        List<LocationRecord> locations = null;
         try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
             String line;
             while ((line = reader.readLine()) != null) {
                 if (line.matches("<when>\\d\\d\\d\\d-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d.\\d\\d\\d-\\d\\d:\\d\\d<\\/when>")) {
                     rawInstants.add(decodeInstant(line));
-                } else if (line.matches("<gx\\:coord>\\d\\d\\.\\d+\\s\\d\\d\\.\\d+\\s\\d<\\/gx\\:coord>")) {
-                    final String replaceAll = line.replaceAll("[<>\\/\\:]+|[a-z]+", "");
-                    final String[] split = replaceAll.split("\\s");
-                    if (split.length == 3) {
-                        float[] rawLoc = new float[2];
-                        final String floatLatitude = split[0];
-                        final String floatLongitude = split[1];
-                        final float latitude = Float.parseFloat(floatLatitude);
-                        final float longitude = Float.parseFloat(floatLongitude);
-                        rawLoc[0] = latitude;
-                        rawLoc[1] = longitude;
-                        rawLocations.add(rawLoc);
-                    }
+                } else if (line.matches("<gx\\:coord>\\d+\\.\\d+\\s\\d+\\.\\d+\\s\\d+<\\/gx\\:coord>")) {
+                    rawLocations.add(decodeLocation(line));
+                } else if (line.matches("<when>.+<\\when>|<gx\\:coord>.+<\\/gx\\:coord>")) {
+                    LOG.log(Level.WARNING,
+                            String.format("Couldn't decode line: %s", line));
                 }
             }
+            locations = assembleList(rawInstants, rawLocations);
         }
-        catch (final IOException x) {
-            System.err.format("IOException: %s%n", x);
+        catch (final IOException | RuntimeException x) {
+            LOG.log(Level.SEVERE, x.getMessage());
         }
+        return locations;
+    }
+
+    private static List<LocationRecord> assembleList(
+            final List<Instant> rawInstants, final List<float[]> rawLocations) {
+        List<LocationRecord> locations = null;
+        if (rawInstants.size() > 0 && rawInstants.size() == rawLocations.size()) {
+            locations = new ArrayList<>(rawInstants.size());
+            for (int i = 0; i < rawInstants.size(); i++) {
+                final float latitude = rawLocations.get(i)[0];
+                final float longitude = rawLocations.get(i)[1];
+                final float altitude = rawLocations.get(i)[2];
+                final Instant instant = rawInstants.get(i);
+                final LocationRecord lr
+                        = new LocationRecord(
+                                latitude, longitude, altitude, instant);
+                locations.add(lr);
+            }
+        }
+        return locations;
+    }
+
+    private static float[] decodeLocation(final String line) throws RuntimeException {
+        final String replaceAll = line.replaceAll("[<>\\/\\:]+|[a-z]+", "");
+        final String[] split = replaceAll.split("\\s");
+        float[] rawLoc = new float[3];
+        if (split.length == 3) {
+            final String stringLatitude = split[0];
+            final String stringLongitude = split[1];
+            final String stringAltidtude = split[2];
+            final float latitude = Float.parseFloat(stringLatitude);
+            final float longitude = Float.parseFloat(stringLongitude);
+            final float altitude = Integer.parseInt(stringAltidtude);
+            rawLoc[0] = latitude;
+            rawLoc[1] = longitude;
+            rawLoc[2] = altitude;
+        } else {
+            throw new RuntimeException("Couldn't decode Location " + line);
+        }
+
+        return rawLoc;
     }
 
     private static Instant decodeInstant(final String line) {

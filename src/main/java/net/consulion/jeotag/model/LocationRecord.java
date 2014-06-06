@@ -22,12 +22,14 @@ public class LocationRecord implements Comparable<LocationRecord> {
 
     private final float latitude;
     private final float longitude;
+    private final float altitude;
     private final Instant time;
 
     public LocationRecord(final float latitude,
-            final float longitude, final Instant time) {
+            final float longitude, final float altitude, final Instant time) {
         this.latitude = latitude;
         this.longitude = longitude;
+        this.altitude = altitude;
         this.time = time;
     }
 
@@ -50,6 +52,10 @@ public class LocationRecord implements Comparable<LocationRecord> {
 
     public float getLongitude() {
         return longitude;
+    }
+
+    public float getAltitude() {
+        return altitude;
     }
 
     public Instant getTime() {
