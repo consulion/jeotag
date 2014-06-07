@@ -35,7 +35,7 @@ public class KmlReader {
 
     private static final Logger LOG = Logger.getLogger(KmlReader.class.getName());
 
-    public static List<LocationRecord> read(final File file) {
+    public static void read(final File file) {
         final Path path = file.toPath();
         final Charset charset = Charset.forName("UTF-8");
         final List<Instant> rawInstants = new ArrayList<>();
@@ -54,11 +54,13 @@ public class KmlReader {
                 }
             }
             locations = assembleList(rawInstants, rawLocations);
+            if (locations != null) {
+                DataHolder.getInstance().addLocations(locations);
+            }
         }
         catch (final IOException | RuntimeException x) {
             LOG.log(Level.SEVERE, x.getMessage());
         }
-        return locations;
     }
 
     private static List<LocationRecord> assembleList(
@@ -116,10 +118,12 @@ public class KmlReader {
                 Integer.parseInt(month), Integer.parseInt(day),
                 Integer.parseInt(hour), Integer.parseInt(minute),
                 Integer.parseInt(second), Integer.parseInt(millies) * 1000);
-
+        //minus 22*60*60 seconds because all times are off by 15 hours
+        // + time zone offset is always 7 hours.
+        //still waiting for an explanation from google...
         return ldt.toInstant(ZoneOffset.ofHoursMinutes(
                 Integer.parseInt(offsetHours),
-                Integer.parseInt(offsetMinutes)));
+                Integer.parseInt(offsetMinutes))).minusSeconds(22 * 60 * 60);
     }
 
     private KmlReader() {

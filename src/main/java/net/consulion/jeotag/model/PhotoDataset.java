@@ -18,13 +18,13 @@ package net.consulion.jeotag.model;
 
 import java.io.File;
 import java.time.Instant;
+import java.util.Objects;
 
 public class PhotoDataset implements Comparable<PhotoDataset> {
 
     private final File filePhoto;
     private Instant instantTaken;
-    private float latitude;
-    private float longitude;
+    private LocationRecord locationRecord;
 
     public PhotoDataset(final File filePhoto) {
         this.filePhoto = filePhoto;
@@ -42,20 +42,12 @@ public class PhotoDataset implements Comparable<PhotoDataset> {
         this.instantTaken = instantTaken;
     }
 
-    public float getLatitude() {
-        return latitude;
+    public LocationRecord getLocationRecord() {
+        return locationRecord;
     }
 
-    public void setLatitude(final float latitude) {
-        this.latitude = latitude;
-    }
-
-    public float getLongitude() {
-        return longitude;
-    }
-
-    public void setLongitude(final float longitude) {
-        this.longitude = longitude;
+    public void setLocationRecord(final LocationRecord locationRecord) {
+        this.locationRecord = locationRecord;
     }
 
     @Override
@@ -64,4 +56,24 @@ public class PhotoDataset implements Comparable<PhotoDataset> {
         final String b = o.getFilePhoto().getName();
         return a.compareTo(b);
     }
+
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 37 * hash + Objects.hashCode(this.filePhoto);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final PhotoDataset other = (PhotoDataset) obj;
+        return Objects.equals(this.getFilePhoto(), other.getFilePhoto());
+    }
+
 }

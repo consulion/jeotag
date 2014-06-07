@@ -27,10 +27,11 @@ import javafx.scene.layout.Pane;
 import javafx.stage.FileChooser;
 import net.consulion.jeotag.DataHolder;
 import net.consulion.jeotag.KmlReader;
+import net.consulion.jeotag.PhotoLoader;
 import net.consulion.jeotag.model.PhotoDataset;
 
 public class TaggingToolBar extends Pane {
-    
+
     private final ToolBar toolBar;
     private final HBox hbButtons;
     private final Button btLoadKML;
@@ -39,7 +40,7 @@ public class TaggingToolBar extends Pane {
     private final Button btSettings;
     private final FileChooser fileChooser;
     private final DataHolder dataHolder;
-    
+
     public TaggingToolBar() {
         toolBar = new ToolBar();
         hbButtons = new HBox();
@@ -51,9 +52,9 @@ public class TaggingToolBar extends Pane {
         dataHolder = DataHolder.getInstance();
         initUI();
         initLayout();
-        
+
     }
-    
+
     private void initLayout() {
         toolBar.setPrefWidth(Double.MAX_VALUE);
         toolBar.getItems().add(hbButtons);
@@ -62,7 +63,7 @@ public class TaggingToolBar extends Pane {
                 btLoadKML, btLoadPhotos, btGeotag, btSettings);
         layout();
     }
-    
+
     private void initUI() {
         btLoadKML.setOnAction((final ActionEvent t) -> {
             onLoadKml();
@@ -71,49 +72,48 @@ public class TaggingToolBar extends Pane {
             onLoadPhotos();
         });
         btGeotag.setDisable(true);
-        
+
     }
-    
+
     private void onLoadKml() {
         fileChooser.setTitle("Load location history...");
-                final List<String> extensions = new ArrayList<>(2);
-        extensions.add("kml");
-        extensions.add("KML");
-        final FileChooser.ExtensionFilter extensionFilter = 
-                new FileChooser.ExtensionFilter("JPEG-Files", extensions);
+        final List<String> extensions = new ArrayList<>(2);
+        extensions.add("*.kml");
+        extensions.add("*.KML");
+        final FileChooser.ExtensionFilter extensionFilter
+                = new FileChooser.ExtensionFilter("KML-Files", extensions);
+        fileChooser.getExtensionFilters().setAll(extensionFilter);
         fileChooser.setSelectedExtensionFilter(extensionFilter);
         final File file = fileChooser.showOpenDialog(getScene().getWindow());
         if (file != null) {
             KmlReader.read(file);
         }
     }
-    
+
     private void onLoadPhotos() {
         fileChooser.setTitle("Load Photos...");
         final List<String> extensions = new ArrayList<>(4);
-        extensions.add("jpg");
-        extensions.add("jpeg");
-        extensions.add("JPG");
-        extensions.add("JPEG");
-        final FileChooser.ExtensionFilter extensionFilter = 
-                new FileChooser.ExtensionFilter("JPEG-Files", extensions);
+        extensions.add("*.jpg");
+        extensions.add("*.jpeg");
+        extensions.add("*.JPG");
+        extensions.add("*.JPEG");
+        final FileChooser.ExtensionFilter extensionFilter
+                = new FileChooser.ExtensionFilter("JPEG-Files", extensions);
+        fileChooser.getExtensionFilters().setAll(extensionFilter);
         fileChooser.setSelectedExtensionFilter(extensionFilter);
         final List<File> list
                 = fileChooser.showOpenMultipleDialog(getScene().getWindow());
         if (list != null) {
-            list.stream().forEach((file) -> {
-                final PhotoDataset photo = new PhotoDataset(file);
-                dataHolder.addPhoto(photo);
-            });
+            PhotoLoader.load(list);
         }
     }
-    
+
     private void onStartGeotagging() {
-        
+
     }
-    
+
     private void onOpenSettings() {
-        
+
     }
-    
+
 }

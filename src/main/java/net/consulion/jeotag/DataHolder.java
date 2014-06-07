@@ -16,9 +16,11 @@
  */
 package net.consulion.jeotag;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import net.consulion.jeotag.model.LocationRecord;
 import net.consulion.jeotag.model.PhotoDataset;
 
@@ -28,36 +30,48 @@ public class DataHolder {
         return InstanceHolder.INSTANCE;
     }
 
-    private final List<PhotoDataset> photos;
-    private final List<LocationRecord> locations;
+    private final ObservableList<PhotoDataset> photos;
+    private final ObservableList<LocationRecord> locations;
 
     private DataHolder() {
-        photos = new ArrayList<>();
-        locations = new ArrayList<>();
+        photos = FXCollections.observableArrayList();
+        locations = FXCollections.observableArrayList();
     }
 
-    public List<PhotoDataset> getPhotos() {
-        return Collections.unmodifiableList(photos);
+    public ObservableList<PhotoDataset> getPhotos() {
+        return photos;
     }
 
-    public List<LocationRecord> getLocations() {
-        return Collections.unmodifiableList(locations);
+    public ObservableList<LocationRecord> getLocations() {
+        return locations;
     }
 
     public void addPhoto(final PhotoDataset photoDataset) {
-        photos.add(photoDataset);
+        final Set<PhotoDataset> noDupSet = new HashSet<>(photos);
+        noDupSet.add(photoDataset);
+        photos.setAll(noDupSet);
+        photos.sort(PhotoDataset::compareTo);
     }
 
     public void addPhotos(final List<PhotoDataset> photoDatasets) {
-        photos.addAll(photoDatasets);
+        final Set<PhotoDataset> noDupSet = new HashSet<>(photos);
+        noDupSet.addAll(photoDatasets);
+        photos.setAll(noDupSet);
+        photos.sort(PhotoDataset::compareTo);
     }
 
     public void addLocation(final LocationRecord locationRecord) {
-        locations.add(locationRecord);
+        final Set<LocationRecord> noDupSet = new HashSet<>(locations);
+        noDupSet.add(locationRecord);
+        locations.setAll(noDupSet);
+        locations.sort(LocationRecord::compareTo);
     }
 
     public void addLocations(final List<LocationRecord> locationRecords) {
-        locations.addAll(locationRecords);
+        final Set<LocationRecord> noDupSet = new HashSet<>(locations);
+        noDupSet.addAll(locationRecords);
+        locations.setAll(noDupSet);
+        locations.sort(LocationRecord::compareTo);
     }
 
     private static final class InstanceHolder {

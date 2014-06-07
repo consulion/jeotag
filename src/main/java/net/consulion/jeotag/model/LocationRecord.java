@@ -17,6 +17,7 @@
 package net.consulion.jeotag.model;
 
 import java.time.Instant;
+import java.util.Objects;
 
 public class LocationRecord implements Comparable<LocationRecord> {
 
@@ -44,6 +45,25 @@ public class LocationRecord implements Comparable<LocationRecord> {
             retVal = 0;
         }
         return retVal;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 97 * hash + Objects.hashCode(this.time);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final LocationRecord other = (LocationRecord) obj;
+        return Objects.equals(this.getTime(), other.getTime());
     }
 
     public float getLatitude() {
