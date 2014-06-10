@@ -22,42 +22,37 @@ import java.util.List;
 import javafx.event.ActionEvent;
 import javafx.scene.control.Button;
 import javafx.scene.control.ToolBar;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
-import net.consulion.jeotag.DataHolder;
 import net.consulion.jeotag.KmlReader;
 import net.consulion.jeotag.PhotoLoader;
-import net.consulion.jeotag.model.PhotoDataset;
 
 public class TaggingToolBar extends Pane {
 
+    private final VBox parent;
     private final ToolBar toolBar;
-    private final HBox hbButtons;
     private final Button btLoadKML;
     private final Button btLoadPhotos;
     private final Button btGeotag;
     private final Button btSettings;
     private final FileChooser fileChooser;
-    private final DataHolder dataHolder;
 
-    public TaggingToolBar() {
+    public TaggingToolBar(final VBox parent) {
+        this.parent = parent;
         toolBar = new ToolBar();
-        hbButtons = new HBox();
         btLoadKML = new Button("Load location history");
         btLoadPhotos = new Button("Load photos");
         btGeotag = new Button("Start Geotagging");
         btSettings = new Button("Settings");
         fileChooser = new FileChooser();
-        dataHolder = DataHolder.getInstance();
         initUI();
         initLayout();
 
     }
 
     private void initLayout() {
-        toolBar.setPrefWidth(Double.MAX_VALUE);
-        toolBar.getItems().add(hbButtons);
+        toolBar.prefWidthProperty().bind(parent.widthProperty());
         this.getChildren().add(toolBar);
         toolBar.getItems().addAll(
                 btLoadKML, btLoadPhotos, btGeotag, btSettings);

@@ -25,6 +25,7 @@ public class PhotoDataset implements Comparable<PhotoDataset> {
     private final File filePhoto;
     private Instant instantTaken;
     private LocationRecord locationRecord;
+    private Boolean hasGeotag;
 
     public PhotoDataset(final File filePhoto) {
         this.filePhoto = filePhoto;
@@ -48,6 +49,14 @@ public class PhotoDataset implements Comparable<PhotoDataset> {
 
     public void setLocationRecord(final LocationRecord locationRecord) {
         this.locationRecord = locationRecord;
+    }
+
+    public Boolean isHasGeotag() {
+        return hasGeotag;
+    }
+
+    public void setHasGeotag(Boolean hasGeotag) {
+        this.hasGeotag = hasGeotag;
     }
 
     @Override

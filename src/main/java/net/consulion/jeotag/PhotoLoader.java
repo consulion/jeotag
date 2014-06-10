@@ -34,7 +34,7 @@ import org.apache.commons.imaging.formats.tiff.TiffImageMetadata;
 import org.apache.commons.imaging.formats.tiff.constants.ExifTagConstants;
 
 public class PhotoLoader {
-    
+
     public static void load(final List<File> files) {
         final List<PhotoDataset> photos = new ArrayList<>(files.size());
         files.stream().forEach((file) -> {
@@ -44,9 +44,11 @@ public class PhotoLoader {
                 final Instant timeTaken = getTimeTaken(exif, file);
                 if (timeTaken != null) {
                     photoDataset.setInstantTaken(timeTaken);
+                    photoDataset.setHasGeotag(photoHasGeotag(exif, file));
                     photos.add(photoDataset);
                 } else {
-                    log(Level.ALL, String.format("Couldn't parse date/time for file %s", file));
+                    log(Level.ALL, String.format(
+                            "Couldn't parse date/time for file %s", file));
                 }
             } else {
                 log(Level.WARNING, String.format(
@@ -55,7 +57,7 @@ public class PhotoLoader {
         });
         DataHolder.getInstance().addPhotos(photos);
     }
-    
+
     private static Instant getTimeTaken(final TiffImageMetadata exif,
             final File file) {
         Instant instant = null;
@@ -92,31 +94,53 @@ public class PhotoLoader {
         }
         return instant;
     }
-    
+
     private static TiffImageMetadata getExif(final File file) {
         TiffImageMetadata exif = null;
         try {
             final IImageMetadata metadata = Imaging.getMetadata(file);
             if (metadata != null) {
-                final JpegImageMetadata jpegMetadata = (JpegImageMetadata) metadata;
+                final JpegImageMetadata jpegMetadata
+                        = (JpegImageMetadata) metadata;
                 exif = jpegMetadata.getExif();
             } else {
                 log(Level.WARNING, String.format(
                         "No metadata found for file %s", file));
             }
-            
+
         }
         catch (final ImageReadException | IOException ex) {
-            Logger.getLogger(PhotoLoader.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(PhotoLoader.class.getName()).
+                    log(Level.SEVERE, null, ex);
         }
         return exif;
     }
-    
+
     private static void log(final Level level, final String message) {
         Logger.getLogger(PhotoLoader.class.getName()).log(level, message);
     }
-    
+
+    private static Boolean photoHasGeotag(final TiffImageMetadata exif,
+            final File file) {
+        Boolean hasGeoTag = false;
+        try {
+            final TiffImageMetadata.GPSInfo gps = exif.getGPS();
+            if (gps != null
+                    && gps.getLatitudeAsDegreesNorth() != 0
+                    && gps.getLongitudeAsDegreesEast() != 0) {
+                hasGeoTag = Boolean.TRUE;
+            }
+        }
+        catch (ImageReadException ex) {
+            Logger.getLogger(PhotoLoader.class.getName()).log(
+                    Level.FINE, null, String.format(
+                            "File: %s couldn't be read. Cause: %s",
+                            file.getPath(), ex.getMessage()));
+        }
+        return hasGeoTag;
+    }
+
     private PhotoLoader() {
     }
-    
+
 }

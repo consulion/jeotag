@@ -14,14 +14,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package net.consulion.jeotag;
 
 import javafx.application.Application;
 import static javafx.application.Application.launch;
-import javafx.scene.Group;
 import javafx.scene.Scene;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Paint;
 import javafx.stage.Stage;
 import net.consulion.jeotag.gui.TaggingPane;
 import net.consulion.jeotag.gui.TaggingToolBar;
@@ -40,11 +41,11 @@ public class MainApp extends Application {
         launch(args);
     }
 
-    private final Group gRoot = new Group();
+    private final BorderPane bpRoot = new BorderPane();
     private Scene scene;
     private VBox vbMain;
     private TaggingPane taggingPane;
-    
+
     private TaggingToolBar toolBar;
 
     @Override
@@ -54,21 +55,20 @@ public class MainApp extends Application {
     }
 
     private void initUI(final Stage stage) {
-        scene = new Scene(gRoot, 1024, 768);
-        scene.getStylesheets().add("/styles/Styles.css");
+        scene = new Scene(bpRoot, 1280, 768);
         stage.setTitle("Jeotag - Photo Geotagging");
         stage.setScene(scene);
         stage.show();
 
         vbMain = new VBox();
-        toolBar = new TaggingToolBar();
+        toolBar = new TaggingToolBar(vbMain);
         taggingPane = new TaggingPane();
     }
 
     private void initLayout() {
-        toolBar.setPrefWidth(Double.MAX_VALUE);
-        vbMain.setPrefWidth(Double.MAX_VALUE);
-        gRoot.getChildren().add(vbMain);
+        scene.setFill(Paint.valueOf("lightgrey"));
+        bpRoot.setCenter(vbMain);
+        VBox.setVgrow(taggingPane, Priority.ALWAYS);
         vbMain.getChildren().add(toolBar);
         vbMain.getChildren().add(taggingPane);
     }
