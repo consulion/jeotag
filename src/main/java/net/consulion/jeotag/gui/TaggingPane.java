@@ -18,49 +18,88 @@ package net.consulion.jeotag.gui;
 
 import java.io.File;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import javafx.event.ActionEvent;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.ToolBar;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
+import javafx.scene.text.Font;
+import javafx.stage.FileChooser;
 import net.consulion.jeotag.DataHolder;
+import net.consulion.jeotag.KmlReader;
+import net.consulion.jeotag.PhotoLoader;
 import net.consulion.jeotag.model.LocationRecord;
 import net.consulion.jeotag.model.PhotoDataset;
 
 public class TaggingPane extends GridPane {
-
+    
     private TableView<LocationRecord> tvLocations;
     private TableView<PhotoDataset> tvPhotos;
     private Label laLocations;
     private Label laPhotos;
-
+    private Button btLoadKML;
+    private Button btLoadPhotos;
+    private Button btGeotag;
+    private FileChooser fileChooser;
+    private ToolBar progressToolBar;
+    private ProgressBar progressBar;
+    
     public TaggingPane() {
         createComponents();
         initLayout();
         createTableColumns();
+        initUi();
     }
-
+    
     private void createComponents() {
         tvLocations = new TableView<>(DataHolder.getInstance().getLocations());
         tvPhotos = new TableView<>(DataHolder.getInstance().getPhotos());
         laLocations = new Label("Locations");
         laPhotos = new Label("Photos");
+        laLocations.setFont(Font.font(20));
+        laPhotos.setFont(Font.font(20));
+        btLoadKML = new Button("Load");
+        btLoadPhotos = new Button("Load");
+        btGeotag = new Button("Start Geotagging");
+        fileChooser = new FileChooser();
+        progressToolBar = new ToolBar();
+        progressBar = new ProgressBar();
     }
-
+    
     private void initLayout() {
-        add(laLocations, 0, 0);
-        add(laPhotos, 1, 0);
-        add(tvLocations, 0, 1);
-        add(tvPhotos, 1, 1);
-        //tvPhotos.setPrefSize(635, 640);
-        //tvLocations.setPrefSize(635, 640);
+        setHgap(7);
+        setVgap(2);
+        add(btLoadKML, 0, 0);
+        add(laLocations, 1, 0);
+        add(btLoadPhotos, 2, 0);
+        add(laPhotos, 3, 0);
+        add(tvLocations, 0, 1, 2, 1);
+        add(tvPhotos, 2, 1, 2, 1);
         tvLocations.prefWidthProperty().bind(this.widthProperty().multiply(0.5));
         tvPhotos.prefWidthProperty().bind(this.widthProperty().multiply(0.5));
-        //TaggingPane.setHgrow(tvLocations, Priority.ALWAYS);
-        //TaggingPane.setHgrow(tvPhotos, Priority.ALWAYS);
+        tvLocations.prefHeightProperty().bind(this.heightProperty());
+        tvPhotos.prefHeightProperty().bind(this.heightProperty());
+        progressToolBar.getItems().add(progressBar);
+        progressToolBar.prefWidthProperty().bind(this.widthProperty());
+        add(progressToolBar, 0, 2, 4, 1);
     }
-
+    
+    private void initUi() {
+        btLoadKML.setOnAction((final ActionEvent t) -> {
+            onLoadKml();
+        });
+        btLoadPhotos.setOnAction((final ActionEvent t) -> {
+            onLoadPhotos();
+        });
+        btGeotag.setDisable(true);
+    }
+    
     @SuppressWarnings("unchecked")
     private void createTableColumns() {
         //location: latitude
@@ -90,7 +129,7 @@ public class TaggingPane extends GridPane {
         time.setCellValueFactory(new PropertyValueFactory<>("time"));
         time.prefWidthProperty().
                 bind(tvLocations.widthProperty().multiply(0.375));
-
+        
         tvLocations.getColumns().addAll(latitude, longitude, altitude, time);
 
         //photo: path
@@ -112,10 +151,45 @@ public class TaggingPane extends GridPane {
         final TableColumn<PhotoDataset, Boolean> hasGeotag
                 = new TableColumn<>("Has Geotag");
         hasGeotag.setCellValueFactory(new PropertyValueFactory<>("hasGeotag"));
-//        instantTaken.prefWidthProperty().
-//                bind(tvPhotos.widthProperty().multiply(0.14));
-
+        
         tvPhotos.getColumns().addAll(filePhoto, instantTaken, hasGeotag);
     }
-
+    
+    private void onLoadKml() {
+        fileChooser.setTitle("Load location history...");
+        final List<String> extensions = new ArrayList<>(2);
+        extensions.add("*.kml");
+        extensions.add("*.KML");
+        final FileChooser.ExtensionFilter extensionFilter
+                = new FileChooser.ExtensionFilter("KML-Files", extensions);
+        fileChooser.getExtensionFilters().setAll(extensionFilter);
+        fileChooser.setSelectedExtensionFilter(extensionFilter);
+        final File file = fileChooser.showOpenDialog(getScene().getWindow());
+        if (file != null) {
+            
+            KmlReader.read(file);
+        }
+    }
+    
+    private void onLoadPhotos() {
+        fileChooser.setTitle("Load Photos...");
+        final List<String> extensions = new ArrayList<>(4);
+        extensions.add("*.jpg");
+        extensions.add("*.jpeg");
+        extensions.add("*.JPG");
+        extensions.add("*.JPEG");
+        final FileChooser.ExtensionFilter extensionFilter
+                = new FileChooser.ExtensionFilter("JPEG-Files", extensions);
+        fileChooser.getExtensionFilters().setAll(extensionFilter);
+        fileChooser.setSelectedExtensionFilter(extensionFilter);
+        final List<File> list
+                = fileChooser.showOpenMultipleDialog(getScene().getWindow());
+        if (list != null) {
+            PhotoLoader.load(list);
+        }
+    }
+    
+    private void onStartGeotagging() {
+        
+    }
 }

@@ -20,8 +20,7 @@ import javafx.application.Application;
 import static javafx.application.Application.launch;
 import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Paint;
 import javafx.stage.Stage;
 import net.consulion.jeotag.gui.TaggingPane;
@@ -40,37 +39,36 @@ public class MainApp extends Application {
     public static void main(final String[] args) {
         launch(args);
     }
-
+    
     private final BorderPane bpRoot = new BorderPane();
     private Scene scene;
-    private VBox vbMain;
+    private GridPane gpMain;
     private TaggingPane taggingPane;
-
     private TaggingToolBar toolBar;
-
+    
     @Override
     public void start(final Stage stage) throws Exception {
         initUI(stage);
         initLayout();
     }
-
+    
     private void initUI(final Stage stage) {
         scene = new Scene(bpRoot, 1280, 768);
         stage.setTitle("Jeotag - Photo Geotagging");
         stage.setScene(scene);
         stage.show();
-
-        vbMain = new VBox();
-        toolBar = new TaggingToolBar(vbMain);
+        gpMain = new GridPane();
+        toolBar = new TaggingToolBar();
         taggingPane = new TaggingPane();
     }
-
+    
     private void initLayout() {
         scene.setFill(Paint.valueOf("lightgrey"));
-        bpRoot.setCenter(vbMain);
-        VBox.setVgrow(taggingPane, Priority.ALWAYS);
-        vbMain.getChildren().add(toolBar);
-        vbMain.getChildren().add(taggingPane);
+        bpRoot.setCenter(gpMain);
+        toolBar.prefWidthProperty().bind(bpRoot.widthProperty());
+        taggingPane.prefHeightProperty().bind(bpRoot.heightProperty());
+        gpMain.add(toolBar, 0, 0);
+        gpMain.add(taggingPane, 0, 1);
     }
-
+    
 }

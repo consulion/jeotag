@@ -16,99 +16,60 @@
  */
 package net.consulion.jeotag.gui;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.scene.control.Button;
 import javafx.scene.control.ToolBar;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
-import javafx.stage.FileChooser;
-import net.consulion.jeotag.KmlReader;
-import net.consulion.jeotag.PhotoLoader;
 
-public class TaggingToolBar extends Pane {
+public class TaggingToolBar extends ToolBar {
 
-    private final VBox parent;
-    private final ToolBar toolBar;
-    private final Button btLoadKML;
-    private final Button btLoadPhotos;
-    private final Button btGeotag;
+    private final Button btExit;
     private final Button btSettings;
-    private final FileChooser fileChooser;
+    private final Button btHelp;
+    private final Button btAbout;
 
-    public TaggingToolBar(final VBox parent) {
-        this.parent = parent;
-        toolBar = new ToolBar();
-        btLoadKML = new Button("Load location history");
-        btLoadPhotos = new Button("Load photos");
-        btGeotag = new Button("Start Geotagging");
+    public TaggingToolBar() {
+        btExit = new Button("Exit");
         btSettings = new Button("Settings");
-        fileChooser = new FileChooser();
+        btHelp = new Button("Help");
+        btAbout = new Button("About");
         initUI();
         initLayout();
-
     }
 
     private void initLayout() {
-        toolBar.prefWidthProperty().bind(parent.widthProperty());
-        this.getChildren().add(toolBar);
-        toolBar.getItems().addAll(
-                btLoadKML, btLoadPhotos, btGeotag, btSettings);
+        getItems().addAll(btExit, btSettings, btHelp, btAbout);
         layout();
     }
 
     private void initUI() {
-        btLoadKML.setOnAction((final ActionEvent t) -> {
-            onLoadKml();
+        btExit.setOnAction((final ActionEvent t) -> {
+            onExit();
         });
-        btLoadPhotos.setOnAction((final ActionEvent t) -> {
-            onLoadPhotos();
+        btSettings.setOnAction((final ActionEvent t) -> {
+            onOpenSettings();
         });
-        btGeotag.setDisable(true);
-
-    }
-
-    private void onLoadKml() {
-        fileChooser.setTitle("Load location history...");
-        final List<String> extensions = new ArrayList<>(2);
-        extensions.add("*.kml");
-        extensions.add("*.KML");
-        final FileChooser.ExtensionFilter extensionFilter
-                = new FileChooser.ExtensionFilter("KML-Files", extensions);
-        fileChooser.getExtensionFilters().setAll(extensionFilter);
-        fileChooser.setSelectedExtensionFilter(extensionFilter);
-        final File file = fileChooser.showOpenDialog(getScene().getWindow());
-        if (file != null) {
-            KmlReader.read(file);
-        }
-    }
-
-    private void onLoadPhotos() {
-        fileChooser.setTitle("Load Photos...");
-        final List<String> extensions = new ArrayList<>(4);
-        extensions.add("*.jpg");
-        extensions.add("*.jpeg");
-        extensions.add("*.JPG");
-        extensions.add("*.JPEG");
-        final FileChooser.ExtensionFilter extensionFilter
-                = new FileChooser.ExtensionFilter("JPEG-Files", extensions);
-        fileChooser.getExtensionFilters().setAll(extensionFilter);
-        fileChooser.setSelectedExtensionFilter(extensionFilter);
-        final List<File> list
-                = fileChooser.showOpenMultipleDialog(getScene().getWindow());
-        if (list != null) {
-            PhotoLoader.load(list);
-        }
-    }
-
-    private void onStartGeotagging() {
-
+        btHelp.setOnAction((final ActionEvent t) -> {
+            onOpenHelp();
+        });
+        btAbout.setOnAction((final ActionEvent t) -> {
+            onOpenAbout();
+        });
     }
 
     private void onOpenSettings() {
 
     }
 
+    private void onOpenHelp() {
+
+    }
+
+    private void onOpenAbout() {
+
+    }
+
+    private void onExit() {
+        Platform.exit();
+    }
 }
