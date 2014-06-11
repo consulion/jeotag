@@ -20,6 +20,7 @@ import java.io.File;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -38,7 +39,7 @@ import net.consulion.jeotag.model.LocationRecord;
 import net.consulion.jeotag.model.PhotoDataset;
 
 public class TaggingPane extends GridPane {
-    
+
     private TableView<LocationRecord> tvLocations;
     private TableView<PhotoDataset> tvPhotos;
     private Label laLocations;
@@ -49,14 +50,14 @@ public class TaggingPane extends GridPane {
     private FileChooser fileChooser;
     private ToolBar progressToolBar;
     private ProgressBar progressBar;
-    
+
     public TaggingPane() {
         createComponents();
         initLayout();
         createTableColumns();
         initUi();
     }
-    
+
     private void createComponents() {
         tvLocations = new TableView<>(DataHolder.getInstance().getLocations());
         tvPhotos = new TableView<>(DataHolder.getInstance().getPhotos());
@@ -71,7 +72,7 @@ public class TaggingPane extends GridPane {
         progressToolBar = new ToolBar();
         progressBar = new ProgressBar();
     }
-    
+
     private void initLayout() {
         setHgap(7);
         setVgap(2);
@@ -89,7 +90,7 @@ public class TaggingPane extends GridPane {
         progressToolBar.prefWidthProperty().bind(this.widthProperty());
         add(progressToolBar, 0, 2, 4, 1);
     }
-    
+
     private void initUi() {
         btLoadKML.setOnAction((final ActionEvent t) -> {
             onLoadKml();
@@ -98,8 +99,9 @@ public class TaggingPane extends GridPane {
             onLoadPhotos();
         });
         btGeotag.setDisable(true);
+        progressBar.setVisible(false);
     }
-    
+
     @SuppressWarnings("unchecked")
     private void createTableColumns() {
         //location: latitude
@@ -129,7 +131,7 @@ public class TaggingPane extends GridPane {
         time.setCellValueFactory(new PropertyValueFactory<>("time"));
         time.prefWidthProperty().
                 bind(tvLocations.widthProperty().multiply(0.375));
-        
+
         tvLocations.getColumns().addAll(latitude, longitude, altitude, time);
 
         //photo: path
@@ -151,10 +153,10 @@ public class TaggingPane extends GridPane {
         final TableColumn<PhotoDataset, Boolean> hasGeotag
                 = new TableColumn<>("Has Geotag");
         hasGeotag.setCellValueFactory(new PropertyValueFactory<>("hasGeotag"));
-        
+
         tvPhotos.getColumns().addAll(filePhoto, instantTaken, hasGeotag);
     }
-    
+
     private void onLoadKml() {
         fileChooser.setTitle("Load location history...");
         final List<String> extensions = new ArrayList<>(2);
@@ -166,11 +168,24 @@ public class TaggingPane extends GridPane {
         fileChooser.setSelectedExtensionFilter(extensionFilter);
         final File file = fileChooser.showOpenDialog(getScene().getWindow());
         if (file != null) {
-            
-            KmlReader.read(file);
+            final Task<Void> task = new Task<Void>() {
+                @Override
+                protected Void call() throws Exception {
+                    KmlReader.read(file);
+                    //TODO: actually show progress.
+                    updateProgress(1, 1);
+                    progressBar.setVisible(false);
+                    return null;
+                }
+
+            };
+            progressBar.setVisible(true);
+            progressBar.progressProperty().unbind();
+            progressBar.progressProperty().bind(task.progressProperty());
+            new Thread(task).start();
         }
     }
-    
+
     private void onLoadPhotos() {
         fileChooser.setTitle("Load Photos...");
         final List<String> extensions = new ArrayList<>(4);
@@ -185,11 +200,23 @@ public class TaggingPane extends GridPane {
         final List<File> list
                 = fileChooser.showOpenMultipleDialog(getScene().getWindow());
         if (list != null) {
-            PhotoLoader.load(list);
+            final Task<Void> task = new Task<Void>() {
+                @Override
+                protected Void call() throws Exception {
+                    PhotoLoader.load(list);
+                    //TODO: actually show progress.
+                    updateProgress(1, 1);
+                    progressBar.setVisible(false);
+                    return null;
+                }
+            };
+            progressBar.setVisible(true);
+            progressBar.progressProperty().bind(task.progressProperty());
+            new Thread(task).start();
         }
     }
-    
+
     private void onStartGeotagging() {
-        
+
     }
 }
