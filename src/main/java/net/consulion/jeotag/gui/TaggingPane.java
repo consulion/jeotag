@@ -17,6 +17,12 @@
 package net.consulion.jeotag.gui;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +37,7 @@ import javafx.scene.control.ToolBar;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
 import javafx.scene.text.Font;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import net.consulion.jeotag.DataHolder;
 import net.consulion.jeotag.KmlReader;
@@ -46,8 +53,10 @@ public class TaggingPane extends GridPane {
     private Label laPhotos;
     private Button btLoadKML;
     private Button btLoadPhotos;
+    private Button btLoadPhotoDirectory;
     private Button btGeotag;
     private FileChooser fileChooser;
+    private DirectoryChooser directoryChooser;
     private ToolBar progressToolBar;
     private ProgressBar progressBar;
 
@@ -65,10 +74,12 @@ public class TaggingPane extends GridPane {
         laPhotos = new Label("Photos");
         laLocations.setFont(Font.font(20));
         laPhotos.setFont(Font.font(20));
-        btLoadKML = new Button("Load");
-        btLoadPhotos = new Button("Load");
+        btLoadKML = new Button("Load location history file(s)");
+        btLoadPhotos = new Button("Load image file(s)");
+        btLoadPhotoDirectory = new Button("Load directory");
         btGeotag = new Button("Start Geotagging");
         fileChooser = new FileChooser();
+        directoryChooser = new DirectoryChooser();
         progressToolBar = new ToolBar();
         progressBar = new ProgressBar();
     }
@@ -76,19 +87,20 @@ public class TaggingPane extends GridPane {
     private void initLayout() {
         setHgap(7);
         setVgap(2);
-        add(btLoadKML, 0, 0);
-        add(laLocations, 1, 0);
-        add(btLoadPhotos, 2, 0);
-        add(laPhotos, 3, 0);
+        add(laLocations, 0, 0);
+        add(btLoadKML, 1, 0);
+        add(laPhotos, 2, 0);
+        add(btLoadPhotos, 3, 0);
+        add(btLoadPhotoDirectory, 4, 0);
         add(tvLocations, 0, 1, 2, 1);
-        add(tvPhotos, 2, 1, 2, 1);
+        add(tvPhotos, 2, 1, 3, 1);
         tvLocations.prefWidthProperty().bind(this.widthProperty().multiply(0.5));
         tvPhotos.prefWidthProperty().bind(this.widthProperty().multiply(0.5));
         tvLocations.prefHeightProperty().bind(this.heightProperty());
         tvPhotos.prefHeightProperty().bind(this.heightProperty());
         progressToolBar.getItems().add(progressBar);
         progressToolBar.prefWidthProperty().bind(this.widthProperty());
-        add(progressToolBar, 0, 2, 4, 1);
+        add(progressToolBar, 0, 2, 5, 1);
     }
 
     private void initUi() {
@@ -97,6 +109,9 @@ public class TaggingPane extends GridPane {
         });
         btLoadPhotos.setOnAction((final ActionEvent t) -> {
             onLoadPhotos();
+        });
+        btLoadPhotoDirectory.setOnAction((final ActionEvent t) -> {
+            onLoadPhotoDirectory();
         });
         btGeotag.setDisable(true);
         progressBar.setVisible(false);
@@ -179,8 +194,69 @@ public class TaggingPane extends GridPane {
                 }
 
             };
-            progressBar.setVisible(true);
             progressBar.progressProperty().unbind();
+            progressBar.setVisible(true);
+            progressBar.progressProperty().bind(task.progressProperty());
+            new Thread(task).start();
+        }
+    }
+
+    private void onLoadPhotoDirectory() {
+        directoryChooser.setTitle("Select photo directoy...");
+        final File dir
+                = directoryChooser.showDialog(getScene().getWindow());
+        if (dir != null && dir.canRead()) {
+            final Task<Void> task = new Task<Void>() {
+                @Override
+                protected Void call() throws Exception {
+                    final List<File> fileList = new ArrayList<>();
+                    final FileVisitor<Path> visitor = new FileVisitor<Path>() {
+
+                        @Override
+                        public FileVisitResult preVisitDirectory(
+                                final Path dir, final BasicFileAttributes attrs)
+                                throws IOException {
+                            return FileVisitResult.CONTINUE;
+                        }
+
+                        @Override
+                        public FileVisitResult visitFile(
+                                final Path file, final BasicFileAttributes attrs)
+                                throws IOException {
+                            if (file.toFile().isFile()) {
+                                final String fString
+                                        = file.getFileName().toString();
+                                final String extension = fString.substring(
+                                        fString.lastIndexOf('.') + 1);
+                                if (extension.equalsIgnoreCase("jpg")
+                                        || extension.equalsIgnoreCase("jpeg")) {
+                                    fileList.add(file.toFile());
+                                }
+                            }
+                            return FileVisitResult.CONTINUE;
+                        }
+
+                        @Override
+                        public FileVisitResult visitFileFailed(
+                                final Path file, final IOException exc)
+                                throws IOException {
+                            return FileVisitResult.CONTINUE;
+                        }
+
+                        @Override
+                        public FileVisitResult postVisitDirectory(
+                                final Path dir, final IOException exc)
+                                throws IOException {
+                            return FileVisitResult.CONTINUE;
+                        }
+                    };
+                    Files.walkFileTree(dir.toPath(), visitor);
+                    addImageFiles(fileList);
+                    return null;
+                }
+            };
+            progressBar.progressProperty().unbind();
+            progressBar.setVisible(true);
             progressBar.progressProperty().bind(task.progressProperty());
             new Thread(task).start();
         }
@@ -199,6 +275,10 @@ public class TaggingPane extends GridPane {
         fileChooser.setSelectedExtensionFilter(extensionFilter);
         final List<File> list
                 = fileChooser.showOpenMultipleDialog(getScene().getWindow());
+        addImageFiles(list);
+    }
+
+    private void addImageFiles(final List<File> list) {
         if (list != null) {
             final Task<Void> task = new Task<Void>() {
                 @Override
@@ -210,6 +290,7 @@ public class TaggingPane extends GridPane {
                     return null;
                 }
             };
+            progressBar.progressProperty().unbind();
             progressBar.setVisible(true);
             progressBar.progressProperty().bind(task.progressProperty());
             new Thread(task).start();
