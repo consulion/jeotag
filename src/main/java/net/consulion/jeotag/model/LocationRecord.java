@@ -18,8 +18,11 @@ package net.consulion.jeotag.model;
 
 import java.time.Instant;
 import java.util.Objects;
+import java.util.logging.Logger;
 
 public class LocationRecord implements Comparable<LocationRecord> {
+
+    private static final Logger LOG = Logger.getLogger(LocationRecord.class.getName());
 
     private final float latitude;
     private final float longitude;

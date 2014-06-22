@@ -26,6 +26,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.scene.control.Button;
@@ -46,7 +47,9 @@ import net.consulion.jeotag.model.LocationRecord;
 import net.consulion.jeotag.model.PhotoDataset;
 
 public class TaggingPane extends GridPane {
-
+    
+    private static final Logger LOG = Logger.getLogger(TaggingPane.class.getName());
+    
     private TableView<LocationRecord> tvLocations;
     private TableView<PhotoDataset> tvPhotos;
     private Label laLocations;
@@ -59,14 +62,14 @@ public class TaggingPane extends GridPane {
     private DirectoryChooser directoryChooser;
     private ToolBar progressToolBar;
     private ProgressBar progressBar;
-
+    
     public TaggingPane() {
         createComponents();
         initLayout();
         createTableColumns();
         initUi();
     }
-
+    
     private void createComponents() {
         tvLocations = new TableView<>(DataHolder.getInstance().getLocations());
         tvPhotos = new TableView<>(DataHolder.getInstance().getPhotos());
@@ -83,7 +86,7 @@ public class TaggingPane extends GridPane {
         progressToolBar = new ToolBar();
         progressBar = new ProgressBar();
     }
-
+    
     private void initLayout() {
         setHgap(7);
         setVgap(2);
@@ -102,7 +105,7 @@ public class TaggingPane extends GridPane {
         progressToolBar.prefWidthProperty().bind(this.widthProperty());
         add(progressToolBar, 0, 2, 5, 1);
     }
-
+    
     private void initUi() {
         btLoadKML.setOnAction((final ActionEvent t) -> {
             onLoadKml();
@@ -116,7 +119,7 @@ public class TaggingPane extends GridPane {
         btGeotag.setDisable(true);
         progressBar.setVisible(false);
     }
-
+    
     @SuppressWarnings("unchecked")
     private void createTableColumns() {
         //location: latitude
@@ -146,7 +149,7 @@ public class TaggingPane extends GridPane {
         time.setCellValueFactory(new PropertyValueFactory<>("time"));
         time.prefWidthProperty().
                 bind(tvLocations.widthProperty().multiply(0.375));
-
+        
         tvLocations.getColumns().addAll(latitude, longitude, altitude, time);
 
         //photo: path
@@ -154,7 +157,7 @@ public class TaggingPane extends GridPane {
                 = new TableColumn<>("Path");
         filePhoto.setCellValueFactory(new PropertyValueFactory<>("filePhoto"));
         filePhoto.prefWidthProperty().
-                bind(tvPhotos.widthProperty().multiply(0.525));
+                bind(tvPhotos.widthProperty().multiply(0.55));
 
         //photo: instant taken
         final TableColumn<PhotoDataset, Instant> instantTaken
@@ -162,16 +165,18 @@ public class TaggingPane extends GridPane {
         instantTaken.setCellValueFactory(
                 new PropertyValueFactory<>("instantTaken"));
         instantTaken.prefWidthProperty().
-                bind(tvPhotos.widthProperty().multiply(0.35));
+                bind(tvPhotos.widthProperty().multiply(0.25));
 
         //photo: has geotag
         final TableColumn<PhotoDataset, Boolean> hasGeotag
                 = new TableColumn<>("Has Geotag");
         hasGeotag.setCellValueFactory(new PropertyValueFactory<>("hasGeotag"));
-
+        hasGeotag.prefWidthProperty().
+                bind(tvPhotos.widthProperty().multiply(0.2));
+        
         tvPhotos.getColumns().addAll(filePhoto, instantTaken, hasGeotag);
     }
-
+    
     private void onLoadKml() {
         fileChooser.setTitle("Load location history...");
         final List<String> extensions = new ArrayList<>(2);
@@ -192,7 +197,7 @@ public class TaggingPane extends GridPane {
                     progressBar.setVisible(false);
                     return null;
                 }
-
+                
             };
             progressBar.progressProperty().unbind();
             progressBar.setVisible(true);
@@ -200,7 +205,7 @@ public class TaggingPane extends GridPane {
             new Thread(task).start();
         }
     }
-
+    
     private void onLoadPhotoDirectory() {
         directoryChooser.setTitle("Select photo directoy...");
         final File dir
@@ -209,16 +214,16 @@ public class TaggingPane extends GridPane {
             final Task<Void> task = new Task<Void>() {
                 @Override
                 protected Void call() throws Exception {
-                    final List<File> fileList = new ArrayList<>();
+                    final List<File> fileList = new ArrayList<>(dir.listFiles().length);
                     final FileVisitor<Path> visitor = new FileVisitor<Path>() {
-
+                        
                         @Override
                         public FileVisitResult preVisitDirectory(
                                 final Path dir, final BasicFileAttributes attrs)
                                 throws IOException {
                             return FileVisitResult.CONTINUE;
                         }
-
+                        
                         @Override
                         public FileVisitResult visitFile(
                                 final Path file, final BasicFileAttributes attrs)
@@ -235,14 +240,14 @@ public class TaggingPane extends GridPane {
                             }
                             return FileVisitResult.CONTINUE;
                         }
-
+                        
                         @Override
                         public FileVisitResult visitFileFailed(
                                 final Path file, final IOException exc)
                                 throws IOException {
                             return FileVisitResult.CONTINUE;
                         }
-
+                        
                         @Override
                         public FileVisitResult postVisitDirectory(
                                 final Path dir, final IOException exc)
@@ -261,7 +266,7 @@ public class TaggingPane extends GridPane {
             new Thread(task).start();
         }
     }
-
+    
     private void onLoadPhotos() {
         fileChooser.setTitle("Load Photos...");
         final List<String> extensions = new ArrayList<>(4);
@@ -277,7 +282,7 @@ public class TaggingPane extends GridPane {
                 = fileChooser.showOpenMultipleDialog(getScene().getWindow());
         addImageFiles(list);
     }
-
+    
     private void addImageFiles(final List<File> list) {
         if (list != null) {
             final Task<Void> task = new Task<Void>() {
@@ -296,8 +301,8 @@ public class TaggingPane extends GridPane {
             new Thread(task).start();
         }
     }
-
+    
     private void onStartGeotagging() {
-
+        
     }
 }

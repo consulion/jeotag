@@ -16,12 +16,15 @@
  */
 package net.consulion.jeotag.gui;
 
+import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.scene.control.Button;
 import javafx.scene.control.ToolBar;
 
 public class TaggingToolBar extends ToolBar {
+
+    private static final Logger LOG = Logger.getLogger(TaggingToolBar.class.getName());
 
     private final Button btExit;
     private final Button btSettings;

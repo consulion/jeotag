@@ -19,8 +19,11 @@ package net.consulion.jeotag.model;
 import java.io.File;
 import java.time.Instant;
 import java.util.Objects;
+import java.util.logging.Logger;
 
 public class PhotoDataset implements Comparable<PhotoDataset> {
+
+    private static final Logger LOG = Logger.getLogger(PhotoDataset.class.getName());
 
     private final File filePhoto;
     private Instant instantTaken;

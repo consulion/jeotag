@@ -16,6 +16,7 @@
  */
 package net.consulion.jeotag;
 
+import java.util.logging.Logger;
 import javafx.application.Application;
 import static javafx.application.Application.launch;
 import javafx.scene.Scene;
@@ -28,6 +29,8 @@ import net.consulion.jeotag.gui.TaggingToolBar;
 
 public class MainApp extends Application {
 
+    private static final Logger LOG = Logger.getLogger(MainApp.class.getName());
+
     /**
      * The main() method is ignored in correctly deployed JavaFX application.
      * main() serves only as fallback in case the application can not be
@@ -39,19 +42,19 @@ public class MainApp extends Application {
     public static void main(final String[] args) {
         launch(args);
     }
-    
+
     private final BorderPane bpRoot = new BorderPane();
     private Scene scene;
     private GridPane gpMain;
     private TaggingPane taggingPane;
     private TaggingToolBar toolBar;
-    
+
     @Override
     public void start(final Stage stage) throws Exception {
         initUI(stage);
         initLayout();
     }
-    
+
     private void initUI(final Stage stage) {
         scene = new Scene(bpRoot, 1280, 768);
         stage.setTitle("Jeotag - Photo Geotagging");
@@ -61,7 +64,7 @@ public class MainApp extends Application {
         toolBar = new TaggingToolBar();
         taggingPane = new TaggingPane();
     }
-    
+
     private void initLayout() {
         scene.setFill(Paint.valueOf("lightgrey"));
         bpRoot.setCenter(gpMain);
@@ -70,5 +73,5 @@ public class MainApp extends Application {
         gpMain.add(toolBar, 0, 0);
         gpMain.add(taggingPane, 0, 1);
     }
-    
+
 }

@@ -19,12 +19,15 @@ package net.consulion.jeotag;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import net.consulion.jeotag.model.LocationRecord;
 import net.consulion.jeotag.model.PhotoDataset;
 
 public class DataHolder {
+
+    private static final Logger LOG = Logger.getLogger(DataHolder.class.getName());
 
     public static DataHolder getInstance() {
         return InstanceHolder.INSTANCE;
@@ -74,7 +77,7 @@ public class DataHolder {
         locations.sort(LocationRecord::compareTo);
     }
 
-    private static final class InstanceHolder {
+    private static class InstanceHolder {
 
         static final DataHolder INSTANCE = new DataHolder();
 

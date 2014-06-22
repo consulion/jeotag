@@ -35,6 +35,8 @@ import org.apache.commons.imaging.formats.tiff.constants.ExifTagConstants;
 
 public class PhotoLoader {
 
+    private static final Logger LOG = Logger.getLogger(PhotoLoader.class.getName());
+
     public static void load(final List<File> files) {
         final List<PhotoDataset> photos = new ArrayList<>(files.size());
         files.stream().forEach((file) -> {

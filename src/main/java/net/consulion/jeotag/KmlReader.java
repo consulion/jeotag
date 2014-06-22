@@ -37,10 +37,14 @@ public class KmlReader {
 
     public static void read(final File file) {
         final Path path = file.toPath();
+        //location history files have around 1228 Bytes of lines which don't
+        //contain location records.
+        //one location record takes around 90 bytes
+        final int locs = (int) ((file.length() - 1228) / 90);
         final Charset charset = Charset.forName("UTF-8");
-        final List<Instant> rawInstants = new ArrayList<>();
-        final List<float[]> rawLocations = new ArrayList<>();
-        List<LocationRecord> locations = null;
+        final List<Instant> rawInstants = new ArrayList<>(locs);
+        final List<float[]> rawLocations = new ArrayList<>(locs);
+        List<LocationRecord> locations;
         try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
             String line;
             while ((line = reader.readLine()) != null) {
